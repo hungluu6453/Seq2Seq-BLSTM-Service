@@ -4,4 +4,4 @@ __pycache__
 venv
 
 resources/models
-# resource/vncorenlp
+resources/vncorenlp

@@ -10,6 +10,9 @@ from transformers import PhobertTokenizer
 from vncorenlp import VnCoreNLP
 
 import constants
+from dotenv import load_dotenv
+
+load_dotenv()
 
 CURRENT_DIR = os.getcwd()
 
@@ -22,11 +25,20 @@ class Inference_model:
         self.define_inference_decoder()
         
     def load_annotator(self):
-        #self.annotator = py_vncorenlp.VnCoreNLP("../resources/vncorenlp/VnCoreNLP-1.1.1.jar", annotators=["wseg"], save_dir="../resources/vncorenlp")
-        self.annotator = VnCoreNLP("./resources/vncorenlp/VnCoreNLP-1.1.1.jar", annotators="wseg", max_heap_size='-Xmx500m') 
+        #self.annotator = VnCoreNLP("./resources/vncorenlp/VnCoreNLP-1.1.1.jar", annotators="wseg", max_heap_size='-Xmx500m') 
+        vncorenlp_svc_host = os.getenv('vncorenlp_svc_host')
+        if not vncorenlp_svc_host:
+            vncorenlp_svc_host = "http://127.0.0.1"
+            
+        vncorenlp_svc_port = os.getenv('vncorenlp_svc_port')
+        if not vncorenlp_svc_port:
+            vncorenlp_svc_port = "8000"
+        
+        self.__annotator = VnCoreNLP(address=vncorenlp_svc_host, port=int(vncorenlp_svc_port))
+
 
     def load_tokenizer(self):
-        self.tokenizer = PhobertTokenizer.from_pretrained('vinai/phobert-large', model_max_length = constants.MODEL_MAX_LENGTH)
+        self.__tokenizer = PhobertTokenizer.from_pretrained('vinai/phobert-large', model_max_length = constants.MODEL_MAX_LENGTH)
 
     def load_inference_model(self, model_name):
         model = load_model('./resources/models/' + model_name)
@@ -70,11 +82,11 @@ class Inference_model:
         text = ' '.join(text.split()) # remove extra white space
         text =  ''.join(ch for ch in text if ch not in exclude) # remove punctuation
         text = text.lower() # lower text
-        text = ' '.join([' '.join(sentence) for sentence in self.annotator.tokenize(text)]) # word segmentation
+        text = ' '.join([' '.join(sentence) for sentence in self.__annotator.tokenize(text)]) # word segmentation
         return text
 
     def tokenize_text(self, text):
-        tokens = self.tokenizer(text, return_attention_mask=False, padding = 'max_length', return_token_type_ids=False, return_tensors = 'np')
+        tokens = self.__tokenizer(text, return_attention_mask=False, padding = 'max_length', return_token_type_ids=False, return_tensors = 'np')
         input_ids = tokens['input_ids']
         return input_ids
 
@@ -97,7 +109,7 @@ class Inference_model:
 
             # Sample a token
             sampled_token_index = np.argmax(output_tokens[0, -1, :])
-            sampled_token =  self.tokenizer.decode([sampled_token_index])
+            sampled_token =  self.__tokenizer.decode([sampled_token_index])
             #print(f"sampled_token_index = {sampled_token_index}; sampled_token = '{sampled_token}'")
                 
             if sampled_token != '</s>' and sampled_token != '<pad>':

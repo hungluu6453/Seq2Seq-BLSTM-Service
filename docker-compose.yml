@@ -1,0 +1,34 @@
+version: "2.1"
+
+services:
+  vncorenlp:
+   image: akagi2106/vncorenlp:latest
+   container_name: vncorenlp
+   restart: always
+   ports:
+     - 8000:8080
+   expose:
+     - 8000
+   stdin_open: true
+   tty: true
+   networks:
+     - chatbot-network
+
+  seq2seq-blstm:
+    image: lch6453/seq2seq-blstm-service:latest
+    container_name: seq2seq-blstm
+    restart: always
+    ports:
+      - 8003:8080
+    expose:
+      - 8003
+    depends_on:
+      - vncorenlp
+    environment:
+      - vncorenlp_svc_host=http://vncorenlp
+      - vncorenlp_svc_port=8080
+    networks:
+      - chatbot-network
+
+networks:
+  chatbot-network: null

@@ -3,4 +3,5 @@
 .coverage
 
 resources/models/seq2seq_blstm_hcm_hn
+resources/vncorenlp
 venv

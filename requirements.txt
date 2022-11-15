@@ -4,4 +4,5 @@ vncorenlp==1.0.3
 tensorflow==2.10.0
 keras==2.10.0
 uvicorn==0.18.3
+python-dotenv==0.21.0
 numpy
